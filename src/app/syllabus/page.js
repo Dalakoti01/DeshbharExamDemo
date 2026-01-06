@@ -1,12 +1,10 @@
-"use client"
-
-import HomePage from '@/components/Home/HomePage'
+import SyllabusPage from '@/components/Syllabus/SyllabusPage'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-      <HomePage/>
+        <SyllabusPage/>
     </div>
   )
 }

@@ -1,12 +1,10 @@
-"use client"
-
-import HomePage from '@/components/Home/HomePage'
+import VerifyEmail from '@/components/auth/VerifyEmail'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-      <HomePage/>
+        <VerifyEmail />
     </div>
   )
 }

@@ -1,12 +1,10 @@
-"use client"
-
-import HomePage from '@/components/Home/HomePage'
+import AdmitCardPage from '@/components/AdmitCards/AdmitCardPage'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-      <HomePage/>
+        <AdmitCardPage/>
     </div>
   )
 }

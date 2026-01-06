@@ -1,5 +1,6 @@
 {
   "name": "deshbharexam",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,14 +10,35 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/genai": "^1.34.0",
+    "@google/generative-ai": "^0.24.1",
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@reduxjs/toolkit": "^2.11.2",
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
+    "cheerio": "^1.1.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
+    "fs-extra": "^11.3.3",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^0.561.0",
+    "mongoose": "^9.0.2",
     "next": "16.0.10",
+    "nodemailer": "^7.0.11",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "react-hot-toast": "^2.6.0",
+    "react-redux": "^9.2.0",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.4.0"
   }
 }

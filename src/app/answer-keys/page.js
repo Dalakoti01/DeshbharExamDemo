@@ -1,12 +1,10 @@
-"use client"
-
-import HomePage from '@/components/Home/HomePage'
+import AnswerKeyPage from '@/components/AnswerKey/AnswerKeyPage'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-      <HomePage/>
+        <AnswerKeyPage/>
     </div>
   )
 }
