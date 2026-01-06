@@ -95,4 +95,4 @@ export async function scrapeRojgarResult() {
 }
 
 /* ------------------ Entry point (cron-safe) ------------------ */
-scrapeRojgarResult().catch(console.error);
+// scrapeRojgarResult().catch(console.error);
