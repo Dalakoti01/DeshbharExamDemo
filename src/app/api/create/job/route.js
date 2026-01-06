@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { ingestAiJobs } from "@/services/jobIngestionService";
+import { ingestAiJobs } from "../../../../../services/jobIngestionService.js";
 import { NextResponse } from "next/server";
 
 export async function POST() {
