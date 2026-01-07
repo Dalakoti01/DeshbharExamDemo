@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import FinalLayout from "@/components/Layout/FinalLayout";
+import FinalLayout from "@/components/layout/FinalLayout";
 import Providers from "@/redux/Providers";
 import { Toaster } from "react-hot-toast";
 
