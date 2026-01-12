@@ -9,7 +9,8 @@ export async function scrapeJobDetail(url) {
 
   const title =
     $("h1").first().text().trim() ||
-    $("h2").first().text().trim();
+    $("h2").first().text().trim() ||
+    null;
 
   const rawContent = [];
 
@@ -37,7 +38,6 @@ export async function scrapeJobDetail(url) {
     url,
     title,
     rawContent,
-    processed: false,
-    scrapedAt: new Date().toISOString(),
+    scrapedAt: new Date(),
   };
 }
