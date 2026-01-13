@@ -55,35 +55,61 @@ Return JSON ONLY.
 
 /* ------------------ AGENT ------------------ */
 export async function runGeminiAgent() {
+  console.log("🤖 Starting Gemini AI processing...");
+
   const unprocessedJobs = await ScrapedJobDetail.find({
     aiProcessed: { $ne: true },
-  }).limit(5); // 🔥 throttle for safety
+  })
+    .sort({ scrapedAt: 1 })
+    .limit(3); // 🔥 keep low for Gemini safety
 
   for (const job of unprocessedJobs) {
     console.log("🤖 AI processing:", job.url);
 
-    const prompt = buildPrompt(job.rawContent);
-    const responseText = await callGemini(prompt);
-    const parsed = safeJsonParse(responseText);
+    try {
+      const prompt = buildPrompt(job.rawContent);
+      const responseText = await callGemini(prompt);
+      const parsed = safeJsonParse(responseText);
 
-    if (!parsed) {
-      console.error("❌ Invalid AI JSON for", job.url);
+      if (!parsed) {
+        console.error("❌ Invalid AI JSON for", job.url);
+        job.aiFailedAt = new Date();
+        await job.save();
+        continue;
+      }
+
+      await AiProcessedJob.updateOne(
+        { sourceUrl: job.url },
+        {
+          $set: {
+            ...parsed,
+            sourceUrl: job.url,
+            aiProcessedAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+
+      job.aiProcessed = true;
+      job.aiProcessedAt = new Date();
+      await job.save();
+
+      console.log("✅ AI processed:", job.url);
+
+    } catch (err) {
+      // 🔥 THIS IS THE KEY FIX
+      console.error("⚠️ Gemini failed for", job.url);
+      console.error(err.message);
+
+      job.aiFailedAt = new Date();
+      job.aiError = err.message;
+      await job.save();
+
+      // ⛔ DO NOT throw
       continue;
     }
-
-    await AiProcessedJob.updateOne(
-      { sourceUrl: job.url },
-      {
-        $set: {
-          ...parsed,
-          sourceUrl: job.url,
-          aiProcessedAt: new Date(),
-        },
-      },
-      { upsert: true }
-    );
-
-    job.aiProcessed = true;
-    await job.save();
   }
+
+  console.log("🤖 Gemini batch completed");
 }
+
