@@ -2,13 +2,11 @@ import axios from "axios";
 import { load } from "cheerio";
 import { scrapeJobDetail } from "./scrapeRojgarJobDetail.js";
 import { connectDB } from "../src/lib/db.js";
+import { runGeminiAgent } from "../ai/geminiJobAgent.js";
 
 // Mongo models
 import ScrapedJobMeta from "../src/models/ScrapedJobMeta.js";
 import ScrapedJobDetail from "../src/models/ScrapedJobDetail.js";
-
-// ❌ DO NOT import fs / path on Vercel
-// ❌ DO NOT run Gemini or ingestion yet
 
 const SITE_URL = "https://www.rojgarresult.com/";
 
@@ -17,6 +15,7 @@ export async function scrapeRojgarResult() {
 
   /* ------------------ DB CONNECT ------------------ */
   await connectDB();
+  console.log("✅ MongoDB connected successfully.");
 
   /* ------------------ 1. Fetch listing ------------------ */
   const { data: html } = await axios.get(SITE_URL);
@@ -37,7 +36,7 @@ export async function scrapeRojgarResult() {
 
   console.log(`📄 Found ${jobs.length} jobs`);
 
-  /* ------------------ 2. Load existing URLs from Mongo ------------------ */
+  /* ------------------ 2. Load existing URLs ------------------ */
   const existingJobs = await ScrapedJobMeta.find(
     { source: "rojgarresult" },
     { url: 1 }
@@ -54,7 +53,7 @@ export async function scrapeRojgarResult() {
       : "✅ No new jobs found"
   );
 
-  /* ------------------ 4. Upsert ALL jobs into meta ------------------ */
+  /* ------------------ 4. Upsert meta ------------------ */
   for (const job of jobs) {
     await ScrapedJobMeta.updateOne(
       { url: job.url },
@@ -72,15 +71,12 @@ export async function scrapeRojgarResult() {
     );
   }
 
-  /* ------------------ 5. Scrape details ONLY for new jobs ------------------ */
+  /* ------------------ 5. Scrape details for NEW jobs ------------------ */
   for (const job of newJobs) {
-    console.log("🔍 Scraping new job detail:", job.title);
+    const exists = await ScrapedJobDetail.exists({ url: job.url });
+    if (exists) continue;
 
-    const alreadyExists = await ScrapedJobDetail.exists({ url: job.url });
-    if (alreadyExists) {
-      console.log("⚠️ Detail already exists, skipping:", job.url);
-      continue;
-    }
+    console.log("🔍 Scraping job detail:", job.title);
 
     const detail = await scrapeJobDetail(job.url);
 
@@ -89,18 +85,13 @@ export async function scrapeRojgarResult() {
       title: detail.title,
       rawContent: detail.rawContent,
       scrapedAt: detail.scrapedAt,
+      aiProcessed: false,
     });
   }
 
-  /* ------------------ 6. AI STAGE (DISABLED) ------------------ */
-  /*
-    Gemini agent currently depends on filesystem JSON.
-    This WILL cause EROFS on Vercel.
+  /* ------------------ 6. AI STAGE (NOW ENABLED) ------------------ */
+  console.log("🤖 Starting Gemini AI processing...");
+  await runGeminiAgent();
 
-    We will migrate Gemini input/output to MongoDB
-    in the next phase and re-enable this safely.
-  */
-  // await runGeminiAgent();
-
-  console.log("🚀 RojgarResult pipeline completed (Mongo-only, pre-AI)");
+  console.log("🚀 RojgarResult pipeline completed (Mongo + AI)");
 }
