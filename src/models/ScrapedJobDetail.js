@@ -6,11 +6,26 @@ const ScrapedJobDetailSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
+      unique: true,
     },
+
+    title: String,
+
     rawContent: {
-      type: Object, // store cheerio-parsed data
+      type: Array, // [{ tag, text, links }]
       required: true,
     },
+
+    isProcessed: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    aiProcessedAt: Date,
+    aiFailedAt: Date,
+    aiError: String,
+
     scrapedAt: {
       type: Date,
       default: Date.now,
