@@ -5,15 +5,19 @@ export function flattenRawContent(rawContent) {
     .map(block => {
       let section = "";
 
+      if (block.tag) {
+        section += `[${block.tag.toUpperCase()}]\n`;
+      }
+
       if (block.text) {
-        section += block.text;
+        section += block.text.trim();
       }
 
       if (Array.isArray(block.links) && block.links.length) {
         const linksText = block.links
           .map(l => `${l.label}: ${l.href}`)
           .join("\n");
-        section += `\n${linksText}`;
+        section += `\nLinks:\n${linksText}`;
       }
 
       return section.trim();

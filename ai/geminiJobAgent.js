@@ -41,20 +41,103 @@ async function callGemini(prompt) {
 
 function buildPrompt(cleanText) {
   return `
-You are a STRICT data extraction engine.
+You are a STRICT data extraction engine for government job notifications.
 
-Convert the recruitment notification below into JSON
-matching the MongoDB job schema.
+Your task is to EXTRACT information from the RAW TEXT below and
+convert it into a JSON object that EXACTLY matches the MongoDB Job schema.
 
-RULES:
-- Output JSON ONLY
-- Use null if data not found
-- Do NOT hallucinate
+--------------------------------
+EXTRACTION RULES:
+--------------------------------
+1. Output VALID JSON ONLY (no markdown, no explanation).
+2. Extract data ONLY if it is clearly present in the text.
+3. Data may appear in PARAGRAPHS, LISTS, or TABLE-LIKE TEXT.
+4. Dates may appear under headings like:
+   - Important Dates
+   - Application Begin / Last Date
+5. Age limits usually appear under:
+   - Age Limit
+   - Minimum Age / Maximum Age
+6. Vacancy details may appear in text or table form.
+7. Filling procedure is usually under:
+   - How to Fill
+8. If a field is not present at all, use null.
+9. DO NOT invent or guess values.
+10. Rewrite descriptions in clear, professional language.
 
-RAW TEXT:
+--------------------------------
+TARGET JSON SCHEMA (MUST MATCH):
+--------------------------------
+{
+  "title": String | null,
+  "description": String | null,
+
+  "location": {
+    "city": String | null,
+    "state": String | null
+  },
+
+  "importantDates": {
+    "applicationDeadline": String | null,
+    "lastDateToPayFees": String | null,
+    "examDate": String | null,
+    "admitCardsDate": String | null
+  },
+
+  "importantLinks": {
+    "applyOnline": String | null,
+    "officialNotification": String | null,
+    "officialWebsite": String | null
+  },
+
+  "otherLinks": [
+    { "linkName": String, "linkUrl": String }
+  ],
+
+  "applicationFees": {
+    "General": String | null,
+    "OBC": String | null,
+    "SC_ST": String | null
+  },
+
+  "ageLimit": {
+    "lowerLimit": {
+      "General": String | null,
+      "OBC": String | null,
+      "SC_ST": String | null
+    },
+    "upperLimit": {
+      "General": String | null,
+      "OBC": String | null,
+      "SC_ST": String | null
+    }
+  },
+
+  "totalPost": Number | null,
+
+  "postClassification": [
+    {
+      "postName": String | null,
+      "numberOfPosts": Number | null,
+      "eligibilityCriteria": [String]
+    }
+  ],
+
+  "fillingProcedure": [String]
+}
+
+--------------------------------
+RAW RECRUITMENT TEXT:
+--------------------------------
 ${cleanText}
+
+--------------------------------
+OUTPUT:
+--------------------------------
+Return ONLY the JSON object.
 `;
 }
+
 
 export async function runGeminiAgent() {
   console.log("🤖 Gemini batch start");
