@@ -23,16 +23,18 @@ export async function scrapeRojgarResult() {
 
   const jobs = [];
 
-  $("h2.gb-headline-text")
-    .filter((_, el) => $(el).text().trim() === "LATEST JOBS")
-    .next(".gb-query-loop-wrapper")
-    .find("h2.gb-headline-text a")
-    .each((_, el) => {
+  // UPDATED SELECTOR (based on new DOM)
+  $(".latest-jobs-section .job-link a").each((_, el) => {
+    const title = $(el).text().trim();
+    const url = $(el).attr("href");
+
+    if (title && url) {
       jobs.push({
-        title: $(el).text().trim(),
-        url: $(el).attr("href"),
+        title,
+        url,
       });
-    });
+    }
+  });
 
   console.log(`📄 Found ${jobs.length} jobs`);
 
@@ -89,7 +91,7 @@ export async function scrapeRojgarResult() {
     });
   }
 
-  /* ------------------ 6. AI STAGE (NOW ENABLED) ------------------ */
+  /* ------------------ 6. AI STAGE ------------------ */
   console.log("🤖 Starting Gemini AI processing...");
   await runGeminiAgent();
 

@@ -1,11 +1,11 @@
 import { connectDB } from "@/lib/db";
-import jobModels from "@/models/jobModels";
+import AiProcessedJob from "@/models/AiProcessedJob";
 import { NextResponse } from "next/server";
 
 export async function GET(req){
     try {
         await connectDB();
-        const allJobs = await jobModels.find().sort({createdAt : -1});
+        const allJobs = await AiProcessedJob.find().sort({createdAt : -1});
 
         if(allJobs.length === 0 || !allJobs){
             return NextResponse.json({message : "No Jobs Found", success : false,jobs : allJobs},{status : 404})

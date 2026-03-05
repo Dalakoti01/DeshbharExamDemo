@@ -17,7 +17,7 @@ export default function JobCard({ job }) {
   return (
     <div className="bg-white border rounded-lg p-3 hover:shadow-md transition">
       <h3 className="text-xs font-semibold mb-1 line-clamp-2">
-        <Link href={`/jobs/${_id}`} className="hover:underline">
+        <Link href={`/job/${_id}`} className="hover:underline">
           {title}
         </Link>
       </h3>
@@ -41,7 +41,7 @@ export default function JobCard({ job }) {
 
       <div className="flex justify-between items-center mt-2 pt-2 border-t text-[10px]">
         <Link
-          href={`/jobs/${_id}`}
+          href={`/job/${_id}`}
           style={{ color: PRIMARY }}
           className="flex items-center"
         >
