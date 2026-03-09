@@ -75,43 +75,7 @@ export default function Header() {
           ))}
 
           {/* Image Tools */}
-          <div className="relative">
-            <button
-              onClick={() => setIsImageToolsOpen(!isImageToolsOpen)}
-              className="px-4 py-2 rounded-xl font-semibold hover:bg-white hover:text-primary transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 cursor-pointer flex items-center gap-1"
-            >
-              {language === "en"
-                ? "Image Resize/Modify"
-                : "छवि आकार/संशोधन"}
-              <span
-                className={`transition-transform ${
-                  isImageToolsOpen ? "rotate-180" : ""
-                }`}
-              >
-                ▼
-              </span>
-            </button>
-
-            {isImageToolsOpen && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white text-gray-700 rounded-lg shadow-lg border py-2 z-50">
-                {[
-                  ["image-resize", "Image Resize", "छवि आकार बदलें"],
-                  ["image-to-pdf", "Image to PDF", "छवि से PDF"],
-                  ["image-compress", "Image Compress", "छवि संपीड़न"],
-                  ["image-convert", "Image Convert", "छवि रूपांतरण"],
-                ].map(([path, en, hi]) => (
-                  <Link
-                    key={path}
-                    href={`/${path}`}
-                    onClick={() => setIsImageToolsOpen(false)}
-                    className="block px-4 py-2 text-sm hover:bg-primary hover:text-white transition"
-                  >
-                    {language === "en" ? en : hi}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          
         </nav>
 
         {/* Actions */}
