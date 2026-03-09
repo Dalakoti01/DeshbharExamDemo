@@ -14,6 +14,38 @@ export default function JobCard({ job }) {
     importantLinks,
   } = job;
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+
+    let parsedDate;
+
+    // Handle DD/MM/YYYY or DD-MM-YYYY
+    if (dateStr.includes("/") || dateStr.includes("-")) {
+      const parts = dateStr.split(/[\/-]/);
+
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+
+        // if year is last (DD/MM/YYYY)
+        if (year.length === 4) {
+          parsedDate = new Date(`${year}-${month}-${day}`);
+        } else {
+          parsedDate = new Date(dateStr);
+        }
+      }
+    }
+
+    // Try normal parsing (for "07 March 2026")
+    if (!parsedDate || isNaN(parsedDate)) {
+      parsedDate = new Date(dateStr);
+    }
+
+    // Final fallback
+    if (isNaN(parsedDate)) return dateStr;
+
+    return parsedDate.toLocaleDateString("en-IN");
+  };
+
   return (
     <div className="bg-white border rounded-lg p-3 hover:shadow-md transition">
       <h3 className="text-xs font-semibold mb-1 line-clamp-2">
@@ -31,10 +63,7 @@ export default function JobCard({ job }) {
         {importantDates?.applicationDeadline && (
           <span className="flex items-center">
             <Calendar size={10} className="mr-1" />
-            Last Date:{" "}
-            {new Date(
-              importantDates.applicationDeadline
-            ).toLocaleDateString()}
+            Last Date: {formatDate(importantDates.applicationDeadline)}
           </span>
         )}
       </div>
@@ -52,6 +81,7 @@ export default function JobCard({ job }) {
           <a
             href={importantLinks.applyOnline}
             target="_blank"
+            rel="noopener noreferrer"
             className="px-2 py-1 rounded text-white"
             style={{ backgroundColor: PRIMARY }}
           >

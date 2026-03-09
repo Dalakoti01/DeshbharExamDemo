@@ -60,7 +60,7 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
           {[
-            ["/age-calculator", "Age Calculator", "आयु कैलकुलेटर"],
+            // ["/age-calculator", "Age Calculator", "आयु कैलकुलेटर"],
             ["/answer-keys", "Answer Keys", "उत्तर कुंजी"],
             ["/syllabus", "Syllabus", "पाठ्यक्रम"],
             ["/news", "News", "समाचार"],
