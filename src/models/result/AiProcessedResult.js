@@ -11,12 +11,14 @@ const AiProcessedResultSchema = new Schema(
     resultDate: {
       type: String,
     },
-    
+
     resultType: {
       type: String,
     },
     importantLinks: [{ linkName: String, linkUrl: String }],
     importantDates: [{ linkName: String, linkUrl: String }],
+    sourceUrl: String,
+    aiProcessedAt: Date,
   },
   { timestamps: true },
 );

@@ -6,6 +6,7 @@ import { runGeminiResultAgent } from "../ai/geminiResultAgent.js";
 // Mongo models
 import ScrapedResultMeta from "@/models/result/ScrapedResultMeta.js";
 import ScrapeResultDetail from "@/models/result/ScrapeResultDetail.js";
+import { scrapeResultDetail } from "./scrapeResultDetail.js";
 
 const SITE_URL = "https://www.rojgarresult.com/";
 
@@ -74,14 +75,14 @@ export async function scrapeRojgarResults() {
 
   /* ------------------ 5. Scrape details for NEW results ------------------ */
   for (const result of newResults) {
-    const exists = await ScrapedResultDetail.exists({ url: result.url });
+    const exists = await ScrapeResultDetail.exists({ url: result.url });
     if (exists) continue;
 
     console.log("🔍 Scraping result detail:", result.title);
 
-    const detail = await ScrapeResultDetail(result.url);
+    const detail = await scrapeResultDetail(result.url);
 
-    await ScrapedResultDetail.create({
+    await ScrapeResultDetail.create({
       url: detail.url,
       title: detail.title,
       rawContent: detail.rawContent,

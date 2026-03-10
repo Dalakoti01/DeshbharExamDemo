@@ -8,16 +8,14 @@ export async function scrapeResultDetail(url) {
   const $ = load(html);
 
   const title =
-    $("h1").first().text().trim() ||
-    $("h2").first().text().trim() ||
-    null;
+    $("h1").first().text().trim() || $("h2").first().text().trim() || null;
 
   const rawContent = [];
 
   $(".entry-content")
     .children()
     .each((_, el) => {
-      const tag = el.tagName;
+      const tag = el.tagName?.toLowerCase() || null;
       const text = $(el).text().trim();
       const links = [];
 

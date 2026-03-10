@@ -4,7 +4,10 @@ import { flattenRawContent } from "../src/lib/flattenRawContent.js";
 import ScrapeResultDetail from "@/models/result/ScrapeResultDetail.js";
 import AiProcessedResult from "@/models/result/AiProcessedResult.js";
 
+
 const API_KEY = process.env.GEMINI_API_KEY_RESULT;
+
+/* ---------------- JSON PARSER ---------------- */
 
 function safeJsonParse(text) {
   try {
@@ -20,6 +23,8 @@ function safeJsonParse(text) {
     return null;
   }
 }
+
+/* ---------------- GEMINI CALL ---------------- */
 
 async function callGemini(prompt) {
   const res = await fetch(
@@ -40,120 +45,122 @@ async function callGemini(prompt) {
   return data.candidates[0].content.parts[0].text;
 }
 
+/* ---------------- PROMPT BUILDER ---------------- */
+
 function buildPrompt(cleanText) {
   return `
-You are a STRICT data extraction engine for government job notifications.
+You are a STRICT data extraction engine for government EXAM RESULTS.
 
-Your task is to EXTRACT information from the RAW TEXT below and
-convert it into a JSON object that EXACTLY matches the MongoDB Job schema.
-
---------------------------------
-EXTRACTION RULES:
---------------------------------
-1. Output VALID JSON ONLY (no markdown, no explanation).
-2. Extract data ONLY if it is clearly present in the text.
-3. Data may appear in PARAGRAPHS, LISTS, or TABLE-LIKE TEXT.
-4. Dates may appear under headings like:
-   - Important Dates
-   - Application Begin / Last Date
-5. Age limits usually appear under:
-   - Age Limit
-   - Minimum Age / Maximum Age
-6. Vacancy details may appear in text or table form.
-7. Filling procedure is usually under:
-   - How to Fill
-8. If a field is not present at all, use null.
-9. DO NOT invent or guess values.
-10. Rewrite descriptions in clear, professional language.
+Your job is to analyze the RAW TEXT of a result page and extract structured data.
 
 --------------------------------
-TARGET JSON SCHEMA (MUST MATCH):
+IMPORTANT RULES
 --------------------------------
+1. Return VALID JSON ONLY.
+2. Do NOT include markdown or explanation.
+3. Extract data ONLY if clearly present.
+4. Do NOT guess values.
+5. If a field is not available, return null.
+6. Rewrite descriptions in clear language.
+7. Extract ONLY the data required in the schema.
+
+--------------------------------
+FIELD DEFINITIONS
+--------------------------------
+
+title
+Full title of the result announcement.
+
+description
+Short summary explaining the result announcement.
+
+examName
+Name of the exam or recruitment.
+Example:
+"India Post GDS Recruitment 2026"
+
+resultDate
+Date when result or merit list was released.
+
+resultType
+Type of result such as:
+- Merit List
+- Final Result
+- Tier 1 Result
+- Mains Result
+- Typing Test Result
+- Scorecard
+- Cutoff
+
+importantLinks
+List of links related to the result such as:
+- Download Result
+- Merit List
+- Scorecard
+- Official Website
+- Notification
+
+Format:
+[
+ { "linkName": "Download Result", "linkUrl": "..." }
+]
+
+importantDates
+Important dates related to the exam or result.
+
+Example:
+[
+ { "linkName": "Result Declared", "linkUrl": "06 March 2026" }
+]
+
+--------------------------------
+TARGET JSON SCHEMA
+--------------------------------
+
 {
   "title": String | null,
   "description": String | null,
-
-  "location": {
-    "city": String | null,
-    "state": String | null
-  },
-
-  "importantDates": {
-    "applicationDeadline": String | null,
-    "lastDateToPayFees": String | null,
-    "examDate": String | null,
-    "admitCardsDate": String | null
-  },
-
-  "importantLinks": {
-    "applyOnline": String | null,
-    "officialNotification": String | null,
-    "officialWebsite": String | null
-  },
-
-  "otherLinks": [
+  "examName": String | null,
+  "resultDate": String | null,
+  "resultType": String | null,
+  "importantLinks": [
     { "linkName": String, "linkUrl": String }
   ],
-
-  "applicationFees": {
-    "General": String | null,
-    "OBC": String | null,
-    "SC_ST": String | null
-  },
-
-  "ageLimit": {
-    "lowerLimit": {
-      "General": String | null,
-      "OBC": String | null,
-      "SC_ST": String | null
-    },
-    "upperLimit": {
-      "General": String | null,
-      "OBC": String | null,
-      "SC_ST": String | null
-    }
-  },
-
-  "totalPost": Number | null,
-
-  "postClassification": [
-    {
-      "postName": String | null,
-      "numberOfPosts": Number | null,
-      "eligibilityCriteria": [String]
-    }
-  ],
-
-  "fillingProcedure": [String]
+  "importantDates": [
+    { "linkName": String, "linkUrl": String }
+  ]
 }
 
 --------------------------------
-RAW RECRUITMENT TEXT:
+RAW RESULT PAGE TEXT
 --------------------------------
+
 ${cleanText}
 
 --------------------------------
-OUTPUT:
+OUTPUT
 --------------------------------
+
 Return ONLY the JSON object.
 `;
 }
 
+/* ---------------- MAIN AGENT ---------------- */
 
-export async function runGeminiAgent() {
-  console.log("🤖 Gemini batch start");
+export async function runGeminiResultAgent() {
+  console.log("🤖 Gemini RESULT batch start");
 
-  const jobs = await ScrapeResultDetail.find({
+  const results = await ScrapeResultDetail.find({
     isProcessed: false,
   })
     .sort({ scrapedAt: 1 })
-    .limit(4); // 🔥 HARD LIMIT
+    .limit(4);
 
-  for (const job of jobs) {
-    console.log("🤖 Processing:", job.url);
+  for (const result of results) {
+    console.log("🤖 Processing:", result.url);
 
     try {
-      const cleanText = flattenRawContent(job.rawContent);
+      const cleanText = flattenRawContent(result.rawContent);
       const prompt = buildPrompt(cleanText);
 
       const responseText = await callGemini(prompt);
@@ -162,32 +169,32 @@ export async function runGeminiAgent() {
       if (!parsed) throw new Error("Invalid JSON from Gemini");
 
       await AiProcessedResult.updateOne(
-        { sourceUrl: job.url },
+        { sourceUrl: result.url },
         {
           $set: {
             ...parsed,
-            sourceUrl: job.url,
+            sourceUrl: result.url,
             aiProcessedAt: new Date(),
           },
         },
         { upsert: true }
       );
 
-      job.isProcessed = true;
-      job.aiProcessedAt = new Date();
-      await job.save();
+      result.isProcessed = true;
+      result.aiProcessedAt = new Date();
+      await result.save();
 
-      console.log("✅ AI success:", job.url);
+      console.log("✅ AI success:", result.url);
 
     } catch (err) {
-      console.error("⚠️ AI failed:", job.url);
+      console.error("⚠️ AI failed:", result.url);
       console.error(err.message);
 
-      job.aiFailedAt = new Date();
-      job.aiError = err.message;
-      await job.save();
+      result.aiFailedAt = new Date();
+      result.aiError = err.message;
+      await result.save();
     }
   }
 
-  console.log("🤖 Gemini batch completed");
+  console.log("🤖 Gemini RESULT batch completed");
 }
