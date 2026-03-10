@@ -1,7 +1,7 @@
 import axios from "axios";
 import { load } from "cheerio";
-import { connectDB } from "../src/lib/db.js";
-import { runGeminiResultAgent } from "../ai/geminiResultAgent.js";
+import { connectDB } from "../../src/lib/db.js";
+import { runGeminiResultAgent } from "../../ai/geminiResultAgent.js";
 
 // Mongo models
 import ScrapedResultMeta from "@/models/result/ScrapedResultMeta.js";
