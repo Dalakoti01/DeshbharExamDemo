@@ -16,13 +16,14 @@ import { useSelector } from "react-redux";
 import JobCard from "../shared/JobCard";
 import NewsCard from "../shared/NewsCard";
 import useGetAllJobs from "@/hooks/jobs/useGetAllJobs";
+import useGetAllResults from "@/hooks/result/useGetAllResults";
 
 const PRIMARY = "#6ec1d1";
 
 export default function HomePage() {
   useGetAllJobs();
-
-  const { allJobs } = useSelector((store) => store.auth);
+  useGetAllResults()
+  const { allJobs,allResults } = useSelector((store) => store.auth);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isVoiceSearch, setIsVoiceSearch] = useState(false);

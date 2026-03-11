@@ -4,8 +4,8 @@ import { connectDB } from "../../src/lib/db.js";
 import { runGeminiResultAgent } from "../../ai/geminiResultAgent.js";
 
 // Mongo models
-import ScrapedResultMeta from "@/models/result/ScrapedResultMeta.js";
-import ScrapeResultDetail from "@/models/result/ScrapeResultDetail.js";
+import ScrapedResultMeta from "../../src/models/result/ScrapedResultMeta.js";
+import ScrapeResultDetail from "../../src/models/result/ScrapeResultDetail.js";
 import { scrapeResultDetail } from "./scrapeResultDetail.js";
 
 const SITE_URL = "https://www.rojgarresult.com/";
@@ -96,4 +96,17 @@ export async function scrapeRojgarResults() {
   await runGeminiResultAgent();
 
   console.log("🚀 Result pipeline completed (Mongo + AI)");
+
+ 
+
 }
+
+// scrapeRojgarResults()
+//   .then(() => {
+//     console.log("✅ Script finished");
+//     process.exit(0);
+//   })
+//   .catch((err) => {
+//     console.error("❌ Script failed:", err);
+//     process.exit(1);
+//   });

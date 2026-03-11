@@ -3,7 +3,9 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user: null,
   allJobs: [],
+  allResults : [],
   singleJob : null,
+  singleResult : null
 };
 
 const authSlice = createSlice({
@@ -18,9 +20,16 @@ const authSlice = createSlice({
     },
     setSingleJob : (state, action) => {
       state.singleJob = action.payload;
+    },
+    setAllResults : (state,action) => {
+      state.allResults = action.payload;
+    },
+    setSingleResult : (state,action) => {
+      state.singleResult = action.payload;
     }
+    
   },
 });
 
-export const { setUser, setAllJobs,setSingleJob } = authSlice.actions;
+export const { setUser, setAllJobs,setSingleJob,setAllResults,setSingleResult } = authSlice.actions;
 export default authSlice.reducer;

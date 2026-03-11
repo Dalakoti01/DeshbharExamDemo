@@ -1,9 +1,8 @@
 import "dotenv/config";
 
 import { flattenRawContent } from "../src/lib/flattenRawContent.js";
-import ScrapeResultDetail from "@/models/result/ScrapeResultDetail.js";
-import AiProcessedResult from "@/models/result/AiProcessedResult.js";
-
+import ScrapeResultDetail from "../src/models/result/ScrapeResultDetail.js";
+import AiProcessedResult from "../src/models/result/AiProcessedResult.js";
 
 const API_KEY = process.env.GEMINI_API_KEY_RESULT;
 
@@ -24,6 +23,46 @@ function safeJsonParse(text) {
   }
 }
 
+/* ---------------- LINK FILTER ---------------- */
+
+function sanitizeLinks(data) {
+  if (!data) return data;
+
+  const banned = ["telegram", "whatsapp", "join", "group"];
+
+  const filterLink = (url) => {
+    if (!url) return null;
+
+    const lower = url.toLowerCase();
+    if (banned.some((b) => lower.includes(b))) return null;
+
+    return url;
+  };
+
+  if (data.importantLinks) {
+    data.importantLinks.downloadResult = filterLink(
+      data.importantLinks.downloadResult
+    );
+
+    data.importantLinks.officialNotification = filterLink(
+      data.importantLinks.officialNotification
+    );
+
+    data.importantLinks.officialWebsite = filterLink(
+      data.importantLinks.officialWebsite
+    );
+  }
+
+  if (data.otherLinks && Array.isArray(data.otherLinks)) {
+    data.otherLinks = data.otherLinks.filter((l) => {
+      if (!l.linkUrl) return false;
+      return !banned.some((b) => l.linkUrl.toLowerCase().includes(b));
+    });
+  }
+
+  return data;
+}
+
 /* ---------------- GEMINI CALL ---------------- */
 
 async function callGemini(prompt) {
@@ -34,7 +73,9 @@ async function callGemini(prompt) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.1 },
+        generationConfig: {
+          temperature: 0.2,
+        },
       }),
     }
   );
@@ -49,72 +90,51 @@ async function callGemini(prompt) {
 
 function buildPrompt(cleanText) {
   return `
-You are a STRICT data extraction engine for government EXAM RESULTS.
+You are a STRICT structured data extraction engine for GOVERNMENT EXAM RESULTS.
 
-Your job is to analyze the RAW TEXT of a result page and extract structured data.
-
---------------------------------
-IMPORTANT RULES
---------------------------------
-1. Return VALID JSON ONLY.
-2. Do NOT include markdown or explanation.
-3. Extract data ONLY if clearly present.
-4. Do NOT guess values.
-5. If a field is not available, return null.
-6. Rewrite descriptions in clear language.
-7. Extract ONLY the data required in the schema.
+Your task is to read raw webpage text and extract structured information.
 
 --------------------------------
-FIELD DEFINITIONS
+CRITICAL RULES
 --------------------------------
 
-title
-Full title of the result announcement.
+1. Return ONLY VALID JSON.
+2. Do NOT include explanations or markdown.
+3. Do NOT guess missing data.
+4. If a field is unavailable return null.
+5. NEVER mention the source website name.
+6. NEVER include phrases like:
+   - "According to..."
+   - "As per website..."
+7. Rewrite the description in original language so it does not look copied.
+8. Ignore social links such as:
+   - Telegram
+   - WhatsApp
+   - Join groups
+9. Focus ONLY on official result related information.
 
-description
-Short summary explaining the result announcement.
+--------------------------------
+IMPORTANT LINK RULES
+--------------------------------
 
-examName
-Name of the exam or recruitment.
-Example:
-"India Post GDS Recruitment 2026"
+Extract ONLY useful result links such as:
 
-resultDate
-Date when result or merit list was released.
-
-resultType
-Type of result such as:
-- Merit List
-- Final Result
-- Tier 1 Result
-- Mains Result
-- Typing Test Result
-- Scorecard
-- Cutoff
-
-importantLinks
-List of links related to the result such as:
 - Download Result
-- Merit List
-- Scorecard
+- Download Merit List
+- Download Scorecard
+- Download Interview Letter
+- Official Notification
 - Official Website
-- Notification
 
-Format:
-[
- { "linkName": "Download Result", "linkUrl": "..." }
-]
+Ignore links like:
 
-importantDates
-Important dates related to the exam or result.
-
-Example:
-[
- { "linkName": "Result Declared", "linkUrl": "06 March 2026" }
-]
+- Telegram
+- WhatsApp
+- Social media
+- Advertisement links
 
 --------------------------------
-TARGET JSON SCHEMA
+TARGET JSON STRUCTURE
 --------------------------------
 
 {
@@ -122,17 +142,39 @@ TARGET JSON SCHEMA
   "description": String | null,
   "examName": String | null,
   "resultDate": String | null,
+
+  "location": {
+    "city": String | null,
+    "state": String | null
+  },
+
   "resultType": String | null,
-  "importantLinks": [
+
+  "importantDates": {
+    "resultDate": String | null,
+    "applicationDeadline": String | null,
+    "lastDateToPayFees": String | null,
+    "examDate": String | null,
+    "admitCardsDate": String | null
+  },
+
+  "importantLinks": {
+    "downloadResult": String | null,
+    "officialNotification": String | null,
+    "officialWebsite": String | null
+  },
+
+  "otherLinks": [
     { "linkName": String, "linkUrl": String }
   ],
-  "importantDates": [
+
+  "otherDates": [
     { "linkName": String, "linkUrl": String }
   ]
 }
 
 --------------------------------
-RAW RESULT PAGE TEXT
+RAW PAGE TEXT
 --------------------------------
 
 ${cleanText}
@@ -141,7 +183,7 @@ ${cleanText}
 OUTPUT
 --------------------------------
 
-Return ONLY the JSON object.
+Return ONLY JSON.
 `;
 }
 
@@ -168,11 +210,13 @@ export async function runGeminiResultAgent() {
 
       if (!parsed) throw new Error("Invalid JSON from Gemini");
 
+      const cleanData = sanitizeLinks(parsed);
+
       await AiProcessedResult.updateOne(
         { sourceUrl: result.url },
         {
           $set: {
-            ...parsed,
+            ...cleanData,
             sourceUrl: result.url,
             aiProcessedAt: new Date(),
           },
@@ -185,7 +229,6 @@ export async function runGeminiResultAgent() {
       await result.save();
 
       console.log("✅ AI success:", result.url);
-
     } catch (err) {
       console.error("⚠️ AI failed:", result.url);
       console.error(err.message);

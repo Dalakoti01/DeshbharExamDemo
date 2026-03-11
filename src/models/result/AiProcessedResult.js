@@ -12,11 +12,29 @@ const AiProcessedResultSchema = new Schema(
       type: String,
     },
 
+    location: {
+      city: String,
+      state: String,
+    },
+
     resultType: {
       type: String,
     },
-    importantLinks: [{ linkName: String, linkUrl: String }],
-    importantDates: [{ linkName: String, linkUrl: String }],
+    importantDates: {
+      resultDate: String,
+      applicationDeadline: String,
+      lastDateToPayFees: String,
+      examDate: String,
+      admitCardsDate: String,
+    },
+    importantLinks : {
+      downloadResult: String,
+      officialNotification: String,
+      officialWebsite: String,
+    },
+
+    otherLinks: [{ linkName: String, linkUrl: String }],
+    otherDates: [{ linkName: String, linkUrl: String }],
     sourceUrl: String,
     aiProcessedAt: Date,
   },

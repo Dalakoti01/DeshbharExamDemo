@@ -12,9 +12,7 @@ const useGetAllJobs = () => {
     const fetchAllJobs = async () => {
       try {
         const res = await axios.get("/api/getAllJobs");
-        console.log("Fetch All Jobs Response:", res.data);
         if (res.data.success) {
-          console.log("sab bhadiaa");
           toast.success(res.data.message);
 
           dispatch(setAllJobs(res.data.jobs));
