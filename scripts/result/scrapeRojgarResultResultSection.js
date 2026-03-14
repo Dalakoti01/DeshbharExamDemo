@@ -101,12 +101,12 @@ export async function scrapeRojgarResults() {
 
 }
 
-// scrapeRojgarResults()
-//   .then(() => {
-//     console.log("✅ Script finished");
-//     process.exit(0);
-//   })
-//   .catch((err) => {
-//     console.error("❌ Script failed:", err);
-//     process.exit(1);
-//   });
+scrapeRojgarResults()
+  .then(() => {
+    console.log("✅ Script finished");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("❌ Script failed:", err);
+    process.exit(1);
+  });

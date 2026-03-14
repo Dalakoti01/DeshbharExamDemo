@@ -25,42 +25,96 @@ function safeJsonParse(text) {
 
 /* ---------------- LINK FILTER ---------------- */
 
-function sanitizeLinks(data) {
+function filterLinks(data) {
   if (!data) return data;
 
-  const banned = ["telegram", "whatsapp", "join", "group"];
+  const bannedDomains = [
+    "telegram",
+    "whatsapp",
+    "rojgarresult",
+    "sarkariresult",
+  ];
 
-  const filterLink = (url) => {
-    if (!url) return null;
-
+  const isValid = (url) => {
+    if (!url) return false;
     const lower = url.toLowerCase();
-    if (banned.some((b) => lower.includes(b))) return null;
-
-    return url;
+    return !bannedDomains.some((d) => lower.includes(d));
   };
 
-  if (data.importantLinks) {
-    data.importantLinks.downloadResult = filterLink(
-      data.importantLinks.downloadResult
-    );
+  data.importantLinks = (data.importantLinks || []).filter((l) =>
+    isValid(l.linkUrl)
+  );
 
-    data.importantLinks.officialNotification = filterLink(
-      data.importantLinks.officialNotification
-    );
-
-    data.importantLinks.officialWebsite = filterLink(
-      data.importantLinks.officialWebsite
-    );
-  }
-
-  if (data.otherLinks && Array.isArray(data.otherLinks)) {
-    data.otherLinks = data.otherLinks.filter((l) => {
-      if (!l.linkUrl) return false;
-      return !banned.some((b) => l.linkUrl.toLowerCase().includes(b));
-    });
-  }
+  data.otherLinks = (data.otherLinks || []).filter((l) =>
+    isValid(l.linkUrl)
+  );
 
   return data;
+}
+
+/* ---------------- NORMALIZE DATA ---------------- */
+
+function normalizeData(parsed) {
+  const result = {
+    importantDates: [{}],
+    importantLinks: [{}],
+    otherLinks: [],
+    otherDates: [],
+  };
+
+  const dateObj = {};
+  const linkObj = {};
+
+  const dates = parsed.importantDates || [];
+  const links = parsed.importantLinks || [];
+
+  /* ----------- MAP IMPORTANT DATES ----------- */
+
+  for (const d of dates) {
+    const name = (d.linkName || "").toLowerCase();
+
+    if (name.includes("exam")) dateObj.examDate = d.linkUrl;
+    else if (name.includes("result")) dateObj.resultDate = d.linkUrl;
+    else if (name.includes("admit")) dateObj.admitCardsDate = d.linkUrl;
+    else if (name.includes("last date")) dateObj.applicationDeadline = d.linkUrl;
+    else if (name.includes("fee")) dateObj.lastDateToPayFees = d.linkUrl;
+    else result.otherDates.push(d);
+  }
+
+  /* ----------- MAP IMPORTANT LINKS ----------- */
+
+  for (const l of links) {
+    const name = (l.linkName || "").toLowerCase();
+
+    if (name.includes("download result")) linkObj.downloadResult = l.linkUrl;
+    else if (name.includes("notification"))
+      linkObj.downloadNotification = l.linkUrl;
+    else if (name.includes("admit card"))
+      linkObj.downloadAdmitCard = l.linkUrl;
+    else if (name.includes("exam notice"))
+      linkObj.downloadExamNotice = l.linkUrl;
+    else if (name.includes("interview"))
+      linkObj.downloadInterviewLetter = l.linkUrl;
+    else if (name.includes("answer key"))
+      linkObj.downloadAnswerKey = l.linkUrl;
+    else if (name.includes("pre result"))
+      linkObj.downloadPreResult = l.linkUrl;
+    else if (name.includes("main result"))
+      linkObj.downloadMainResult = l.linkUrl;
+    else if (name.includes("merit"))
+      linkObj.downloadMeritList = l.linkUrl;
+    else if (name.includes("official"))
+      linkObj.officialWebsite = l.linkUrl;
+    else result.otherLinks.push(l);
+  }
+
+  result.importantDates = [dateObj];
+  result.importantLinks = [linkObj];
+
+  return {
+    ...parsed,
+    ...result,
+  };
 }
 
 /* ---------------- GEMINI CALL ---------------- */
@@ -90,100 +144,52 @@ async function callGemini(prompt) {
 
 function buildPrompt(cleanText) {
   return `
-You are a STRICT structured data extraction engine for GOVERNMENT EXAM RESULTS.
-
-Your task is to read raw webpage text and extract structured information.
-
---------------------------------
-CRITICAL RULES
---------------------------------
-
-1. Return ONLY VALID JSON.
-2. Do NOT include explanations or markdown.
-3. Do NOT guess missing data.
-4. If a field is unavailable return null.
-5. NEVER mention the source website name.
-6. NEVER include phrases like:
-   - "According to..."
-   - "As per website..."
-7. Rewrite the description in original language so it does not look copied.
-8. Ignore social links such as:
-   - Telegram
-   - WhatsApp
-   - Join groups
-9. Focus ONLY on official result related information.
-
---------------------------------
-IMPORTANT LINK RULES
---------------------------------
-
-Extract ONLY useful result links such as:
-
-- Download Result
-- Download Merit List
-- Download Scorecard
-- Download Interview Letter
-- Official Notification
-- Official Website
-
-Ignore links like:
-
-- Telegram
-- WhatsApp
-- Social media
-- Advertisement links
-
---------------------------------
-TARGET JSON STRUCTURE
---------------------------------
-
-{
-  "title": String | null,
-  "description": String | null,
-  "examName": String | null,
-  "resultDate": String | null,
-
-  "location": {
-    "city": String | null,
-    "state": String | null
-  },
-
-  "resultType": String | null,
-
-  "importantDates": {
-    "resultDate": String | null,
-    "applicationDeadline": String | null,
-    "lastDateToPayFees": String | null,
-    "examDate": String | null,
-    "admitCardsDate": String | null
-  },
-
-  "importantLinks": {
-    "downloadResult": String | null,
-    "officialNotification": String | null,
-    "officialWebsite": String | null
-  },
-
-  "otherLinks": [
-    { "linkName": String, "linkUrl": String }
-  ],
-
-  "otherDates": [
-    { "linkName": String, "linkUrl": String }
-  ]
-}
-
---------------------------------
-RAW PAGE TEXT
---------------------------------
-
-${cleanText}
-
---------------------------------
-OUTPUT
---------------------------------
+Extract structured data for a government exam RESULT page.
 
 Return ONLY JSON.
+
+Structure:
+
+{
+"title": String,
+"description": String,
+"examName": String,
+"resultDate": String,
+
+"location": {
+"city": String,
+"state": String
+},
+
+"resultType": String,
+
+"importantDates":[
+{"linkName":String,"linkUrl":String}
+],
+
+"importantLinks":[
+{"linkName":String,"linkUrl":String}
+],
+
+"otherLinks":[
+{"linkName":String,"linkUrl":String}
+],
+
+"otherDates":[
+{"linkName":String,"linkUrl":String}
+]
+}
+
+Rules:
+- Only include official links
+- Ignore Telegram, WhatsApp, social media
+- Ignore internal aggregator links
+- Extract exam dates, result dates, application dates
+- Extract download result, admit card, notification, official site links
+
+TEXT:
+
+${cleanText}
 `;
 }
 
@@ -203,14 +209,18 @@ export async function runGeminiResultAgent() {
 
     try {
       const cleanText = flattenRawContent(result.rawContent);
+
       const prompt = buildPrompt(cleanText);
 
       const responseText = await callGemini(prompt);
+
       const parsed = safeJsonParse(responseText);
 
       if (!parsed) throw new Error("Invalid JSON from Gemini");
 
-      const cleanData = sanitizeLinks(parsed);
+      let cleanData = filterLinks(parsed);
+
+      cleanData = normalizeData(cleanData);
 
       await AiProcessedResult.updateOne(
         { sourceUrl: result.url },

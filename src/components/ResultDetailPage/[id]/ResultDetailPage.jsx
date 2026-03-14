@@ -2,92 +2,31 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { CheckSquare, ExternalLink, ChevronLeft } from "lucide-react";
+import { ExternalLink, ChevronLeft } from "lucide-react";
+import useGetSingleResult from "@/hooks/result/useGetSingleResult";
+import { useSelector } from "react-redux";
 
 export default function ResultDetailPage() {
   const params = useParams();
   const id = params?.id;
 
-  const results = [
-    {
-      id: "1",
-      examName: "UP Police SI Final Result 2025",
-      resultType: "Final Result",
-      organization: "Uttar Pradesh Police Recruitment & Promotion Board",
-      totalPosts: "4543",
-      resultDate: "2025-01-05",
-      downloadLink: "https://uppbpb.gov.in/results",
-      date: "2025-01-05",
-      category: "Police",
-      isNew: true,
-    },
-    {
-      id: "2",
-      examName: "Bihar Police Home Guard Result 2025",
-      resultType: "Final Result",
-      organization: "Bihar Police Department",
-      totalPosts: "15000",
-      resultDate: "2025-01-15",
-      downloadLink: "https://bihar.gov.in/results",
-      date: "2025-01-15",
-      category: "Police",
-      isNew: true,
-    },
-  ];
+  useGetSingleResult(id);
 
-  const relatedJob = {
-    applyStartDate: "2024-04-01",
-    lastDate: "2024-05-01",
-    examDate: "2024-09-15",
-    admitCardDate: "Before Exam",
+  const { singleResult } = useSelector((store) => store.auth);
 
-    applicationFee: {
-      general: "₹400",
-      scSt: "₹200",
-    },
+  /* ---------- Extract Arrays ---------- */
 
-    ageLimit: {
-      min: "21",
-      max: "28",
-      asOn: "01 July 2024",
-    },
+  const importantDates = singleResult?.importantDates?.[0] || {};
+  const importantLinks = singleResult?.importantLinks?.[0] || {};
 
-    vacancyDetails: [
-      {
-        postName: "Sub Inspector (SI)",
-        eligibility:
-          "Graduate degree in any discipline from a recognized university",
-      },
-      {
-        postName: "Platoon Commander",
-        eligibility:
-          "Graduate degree in any discipline from a recognized university",
-      },
-      {
-        postName: "Constable",
-        eligibility: "10+2 pass from recognized board",
-      },
-    ],
-
-    modeOfSelection: [
-      "Written Examination",
-      "Physical Efficiency Test",
-      "Document Verification",
-      "Medical Examination",
-    ],
-
-    officialWebsite: "https://uppbpb.gov.in",
-    officialNotificationLink: "https://uppbpb.gov.in/notification",
-  };
-
-  const result = results.find((r) => r.id === id);
+  /* ---------- Date Formatter ---------- */
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
 
     if (
-      dateString.toLowerCase().includes("before") ||
-      dateString.toLowerCase().includes("after")
+      dateString?.toLowerCase()?.includes("before") ||
+      dateString?.toLowerCase()?.includes("after")
     ) {
       return dateString;
     }
@@ -102,7 +41,7 @@ export default function ResultDetailPage() {
     });
   };
 
-  if (!result) {
+  if (!singleResult) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-12">
         <div className="card p-8 text-center">
@@ -118,12 +57,23 @@ export default function ResultDetailPage() {
     );
   }
 
-  const postDate = formatDate(result.date || result.resultDate);
-  const postTime = "6:25 pm";
+  const postDate = formatDate(
+    singleResult?.resultDate ||
+      importantDates?.resultDate ||
+      singleResult?.createdAt
+  );
+
+  const hasDates =
+    Object.keys(importantDates).length > 0 ||
+    (singleResult?.otherDates && singleResult?.otherDates.length > 0);
+
+  const hasLinks =
+    Object.keys(importantLinks).length > 0 ||
+    (singleResult?.otherLinks && singleResult?.otherLinks.length > 0);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      
+
       {/* Back Button */}
 
       <div className="mb-6">
@@ -142,161 +92,183 @@ export default function ResultDetailPage() {
           {/* Post Date */}
 
           <div className="text-sm text-neutral-500 mb-4">
-            Post Date: {postDate} {postTime}
+            Post Date: {postDate}
           </div>
 
           {/* Title */}
 
           <div className="mb-4 pb-4 border-b border-neutral-200">
             <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-2">
-              {result.examName}
+              {singleResult.examName}
             </h1>
-            <p className="text-lg text-neutral-700">{result.organization}</p>
           </div>
 
           {/* Description */}
 
-          <div className="border-b border-neutral-200 pb-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Description</h2>
+          {singleResult.description && (
+            <div className="border-b border-neutral-200 pb-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Description</h2>
+              <p className="text-lg text-neutral-700">
+                {singleResult.description}
+              </p>
+            </div>
+          )}
 
-            <p className="text-lg text-neutral-700">
-              <strong>{result.organization}</strong>, The <strong>Result</strong>{" "}
-              for the recruitment of{" "}
-              <strong>{result.examName.replace(" Result", "")}</strong> has been
-              released. The exam was conducted on{" "}
-              <strong>{formatDate(result.resultDate)}</strong>.
-            </p>
-          </div>
-
-          {/* OUT Heading */}
+          {/* RESULT TITLE */}
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-neutral-900 mb-2">
-              {result.examName.replace(" Result", "")} {result.resultType} – Out
+              {singleResult.examName} – Result Out
             </h2>
           </div>
 
-          {/* Important Dates */}
+          {/* IMPORTANT DATES */}
 
-          <div className="mb-6">
+          {hasDates && (
+            <div className="mb-6">
 
-            <h3 className="text-xl font-semibold mb-4">Important Dates</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Important Dates
+              </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <div className="bg-neutral-50 p-3 rounded-lg">
-                <p className="text-sm text-neutral-500">Apply Start Date</p>
-                <p className="font-semibold">
-                  {formatDate(relatedJob.applyStartDate)}
-                </p>
+                {importantDates.examDate && (
+                  <DateCard label="Exam Date" value={importantDates.examDate} />
+                )}
+
+                {importantDates.resultDate && (
+                  <DateCard label="Result Declared" value={importantDates.resultDate} />
+                )}
+
+                {importantDates.admitCardsDate && (
+                  <DateCard label="Admit Card Date" value={importantDates.admitCardsDate} />
+                )}
+
+                {importantDates.applicationDeadline && (
+                  <DateCard label="Last Date" value={importantDates.applicationDeadline} />
+                )}
+
+                {importantDates.lastDateToPayFees && (
+                  <DateCard
+                    label="Last Date To Pay Fees"
+                    value={importantDates.lastDateToPayFees}
+                  />
+                )}
+
+                {/* OTHER DATES */}
+
+                {singleResult?.otherDates?.map((date, index) => (
+                  <DateCard
+                    key={index}
+                    label={date.linkName}
+                    value={date.linkUrl}
+                  />
+                ))}
+
               </div>
+            </div>
+          )}
 
-              <div className="bg-neutral-50 p-3 rounded-lg">
-                <p className="text-sm text-neutral-500">Last Date</p>
-                <p className="font-semibold">
-                  {formatDate(relatedJob.lastDate)}
-                </p>
-              </div>
+          {/* IMPORTANT LINKS */}
 
-              <div className="bg-neutral-50 p-3 rounded-lg">
-                <p className="text-sm text-neutral-500">Exam Date</p>
-                <p className="font-semibold">
-                  {formatDate(relatedJob.examDate)}
-                </p>
-              </div>
+          {hasLinks && (
+            <div className="border-t border-neutral-200 pt-6 mb-6">
 
-              <div className="bg-neutral-50 p-3 rounded-lg">
-                <p className="text-sm text-neutral-500">Result Declared</p>
-                <p className="font-semibold">
-                  {formatDate(result.resultDate)}
-                </p>
-              </div>
+              <h2 className="text-2xl font-semibold mb-4">
+                SOME USEFUL IMPORTANT LINKS
+              </h2>
+
+              <table className="w-full border border-neutral-300">
+
+                <tbody>
+
+                  {importantLinks.downloadResult && (
+                    <LinkRow
+                      label="Download Result"
+                      url={importantLinks.downloadResult}
+                    />
+                  )}
+
+                  {importantLinks.downloadNotification && (
+                    <LinkRow
+                      label="Download Notification"
+                      url={importantLinks.downloadNotification}
+                    />
+                  )}
+
+                  {importantLinks.downloadAdmitCard && (
+                    <LinkRow
+                      label="Download Admit Card"
+                      url={importantLinks.downloadAdmitCard}
+                    />
+                  )}
+
+                  {importantLinks.downloadExamNotice && (
+                    <LinkRow
+                      label="Download Exam Notice"
+                      url={importantLinks.downloadExamNotice}
+                    />
+                  )}
+
+                  {importantLinks.downloadInterviewLetter && (
+                    <LinkRow
+                      label="Download Interview Letter"
+                      url={importantLinks.downloadInterviewLetter}
+                    />
+                  )}
+
+                  {importantLinks.downloadAnswerKey && (
+                    <LinkRow
+                      label="Download Answer Key"
+                      url={importantLinks.downloadAnswerKey}
+                    />
+                  )}
+
+                  {importantLinks.downloadPreResult && (
+                    <LinkRow
+                      label="Download Pre Result"
+                      url={importantLinks.downloadPreResult}
+                    />
+                  )}
+
+                  {importantLinks.downloadMainResult && (
+                    <LinkRow
+                      label="Download Main Result"
+                      url={importantLinks.downloadMainResult}
+                    />
+                  )}
+
+                  {importantLinks.downloadMeritList && (
+                    <LinkRow
+                      label="Download Merit List"
+                      url={importantLinks.downloadMeritList}
+                    />
+                  )}
+
+                  {importantLinks.officialWebsite && (
+                    <LinkRow
+                      label="Official Website"
+                      url={importantLinks.officialWebsite}
+                    />
+                  )}
+
+                  {/* OTHER LINKS */}
+
+                  {singleResult?.otherLinks?.map((link, index) => (
+                    <LinkRow
+                      key={index}
+                      label={link.linkName}
+                      url={link.linkUrl}
+                    />
+                  ))}
+
+                </tbody>
+
+              </table>
 
             </div>
-          </div>
-
-          {/* Mode of Selection */}
-
-          <div className="mb-6">
-
-            <h3 className="text-xl font-semibold mb-4">
-              Mode Of Selection
-            </h3>
-
-            <div className="bg-neutral-50 p-4 rounded-lg">
-
-              {relatedJob.modeOfSelection.map((mode, idx) => (
-                <div key={idx} className="flex items-center mb-2">
-                  <CheckSquare size={16} className="mr-2 text-primary" />
-                  <span className="text-sm font-semibold">{mode}</span>
-                </div>
-              ))}
-
-            </div>
-
-          </div>
-
-          {/* Important Links */}
-
-          <div className="border-t border-neutral-200 pt-6 mb-6">
-
-            <h2 className="text-2xl font-semibold mb-4">
-              SOME USEFUL IMPORTANT LINKS
-            </h2>
-
-            <table className="w-full border border-neutral-300">
-
-              <tbody>
-
-                <tr className="border-b border-neutral-300 bg-neutral-50">
-
-                  <td className="border p-3 text-sm font-semibold w-1/3">
-                    Download Result
-                  </td>
-
-                  <td className="border p-3 text-sm">
-
-                    <a
-                      href={result.downloadLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline font-medium"
-                    >
-                      Click Here
-                      <ExternalLink size={14} className="inline ml-1" />
-                    </a>
-
-                  </td>
-
-                </tr>
-
-                <tr className="bg-neutral-50">
-
-                  <td className="border p-3 text-sm font-semibold">
-                    Official Website
-                  </td>
-
-                  <td className="border p-3 text-sm">
-
-                    <a
-                      href={relatedJob.officialWebsite}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline font-medium"
-                    >
-                      Click Here
-                      <ExternalLink size={14} className="inline ml-1" />
-                    </a>
-
-                  </td>
-
-                </tr>
-
-              </tbody>
-
-            </table>
-
-          </div>
+          )}
 
         </div>
       </div>
@@ -314,5 +286,55 @@ export default function ResultDetailPage() {
       </div>
 
     </div>
+  );
+}
+
+/* ---------- Helper Components ---------- */
+
+function DateCard({ label, value }) {
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return dateString;
+
+    return d.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <div className="bg-neutral-50 p-3 rounded-lg">
+      <p className="text-sm text-neutral-500">{label}</p>
+      <p className="font-semibold">{formatDate(value)}</p>
+    </div>
+  );
+}
+
+function LinkRow({ label, url }) {
+  return (
+    <tr className="border-b border-neutral-300 bg-neutral-50">
+
+      <td className="border p-3 text-sm font-semibold w-1/3">
+        {label}
+      </td>
+
+      <td className="border p-3 text-sm">
+
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline font-medium"
+        >
+          Click Here
+          <ExternalLink size={14} className="inline ml-1" />
+        </a>
+
+      </td>
+
+    </tr>
   );
 }

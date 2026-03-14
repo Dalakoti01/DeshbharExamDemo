@@ -22,16 +22,19 @@ const PRIMARY = "#6ec1d1";
 
 export default function HomePage() {
   useGetAllJobs();
-  useGetAllResults()
-  const { allJobs,allResults } = useSelector((store) => store.auth);
+  useGetAllResults();
+
+  const { allJobs, allResults } = useSelector((store) => store.auth);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isVoiceSearch, setIsVoiceSearch] = useState(false);
 
-  // simple slicing (you can refine later)
+  // slicing
   const latestJobs = allJobs?.slice(0, 5);
-  const resultJobs = allJobs?.slice(5, 9);
   const admitCardJobs = allJobs?.slice(9, 13);
+
+  // ⭐ results from results collection
+  const latestResults = allResults?.slice(0, 5);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -103,6 +106,7 @@ export default function HomePage() {
 
       {/* ================= FOUR COLUMNS ================= */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Latest Jobs */}
         <Column title="Latest Jobs">
           {latestJobs?.map((job) => (
             <JobCard key={job._id} job={job} />
@@ -110,13 +114,29 @@ export default function HomePage() {
           <FooterLink href="/jobs" label="View All Jobs" />
         </Column>
 
+        {/* ⭐ RESULTS COLUMN (UPDATED) */}
         <Column title="Results">
-          {resultJobs?.map((job) => (
-            <JobCard key={job._id} job={job} />
+          {latestResults?.map((result) => (
+            <Link
+              key={result._id}
+              href={`/result/${result._id}`}
+              className="block border rounded-lg p-2 text-sm hover:bg-gray-50 cursor-pointer"
+            >
+              <p className="font-medium">{result.examName}</p>
+
+              {result.resultDate && (
+                <span className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                  <Calendar size={12} />
+                  {new Date(result.resultDate).toLocaleDateString()}
+                </span>
+              )}
+            </Link>
           ))}
+
           <FooterLink href="/results" label="View All Results" />
         </Column>
 
+        {/* Admit Cards */}
         <Column title="Admit Cards">
           {admitCardJobs?.map((job) => (
             <JobCard key={job._id} job={job} />
@@ -124,6 +144,7 @@ export default function HomePage() {
           <FooterLink href="/admit-cards" label="View All Admit Cards" />
         </Column>
 
+        {/* News */}
         <Column title="News">
           <NewsCard />
           <NewsCard />
