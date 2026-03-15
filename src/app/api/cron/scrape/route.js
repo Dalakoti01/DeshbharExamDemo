@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { scrapeRojgarResult } from "../../../../../scripts/scrapeRojgarResults";
 import { scrapeRojgarResults } from "../../../../../scripts/result/scrapeRojgarResultResultSection";
+import {scrapeRojgarAdmitCards} from "../../../../../scripts/admitCard/scrapeRojgarResultAdmitCardSection.js"
 
 /* -------------------------------------------------
    In-memory lock to prevent overlapping executions
@@ -52,6 +53,9 @@ export async function GET(req) {
 
     console.log("📢 Running RESULTS scraper...");
     await scrapeRojgarResults();
+
+    console.log("🎫 Running ADMIT CARDS scraper...")
+    await scrapeRojgarAdmitCards();
 
     console.log("✅ Cron job completed successfully");
 

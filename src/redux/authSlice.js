@@ -5,7 +5,9 @@ const initialState = {
   allJobs: [],
   allResults : [],
   singleJob : null,
-  singleResult : null
+  singleResult : null,
+  allAdmitCards : [],
+  singleAdmitCard : null,
 };
 
 const authSlice = createSlice({
@@ -26,10 +28,16 @@ const authSlice = createSlice({
     },
     setSingleResult : (state,action) => {
       state.singleResult = action.payload;
+    },
+    setAllAdmitCards : (state,action) => {
+      state.allAdmitCards = action.payload;
+    },
+    setSingleAdmitCard : (state,action) => {
+      state.singleAdmitCard = action.payload;
     }
     
   },
 });
 
-export const { setUser, setAllJobs,setSingleJob,setAllResults,setSingleResult } = authSlice.actions;
+export const { setUser, setAllJobs,setSingleJob,setAllResults,setSingleResult,setAllAdmitCards,setSingleAdmitCard } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,19 +1,26 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Download,
   Search,
   Calendar,
   ChevronRight,
   Share2,
+  ExternalLink,
 } from "lucide-react";
-import { mockAdmitCards } from "@/data/mockData";
+import { useSelector } from "react-redux";
+import useGetAllAdmitCards from "@/hooks/admitCard/useGetAllAdmitCards";
 
 const PRIMARY = "#6ec1d1";
 
 export default function AdmitCardPage() {
+  useGetAllAdmitCards();
+
+  const { allAdmitCards } = useSelector((store) => store.auth);
+
+  const [searchQuery, setSearchQuery] = useState("");
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -26,6 +33,16 @@ export default function AdmitCardPage() {
       alert("Link copied to clipboard");
     }
   };
+
+  /* ---------- Search Filter ---------- */
+
+  const filteredAdmitCards = useMemo(() => {
+    if (!allAdmitCards) return [];
+
+    return allAdmitCards.filter((card) =>
+      card.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [allAdmitCards, searchQuery]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -50,8 +67,8 @@ export default function AdmitCardPage() {
         className="p-4 rounded-lg mb-8 text-sm text-neutral-800"
         style={{ backgroundColor: `${PRIMARY}33` }}
       >
-        Download admit cards for upcoming examinations. Check exam dates carefully
-        and carry your admit card to the exam center.
+        Download admit cards for upcoming examinations. Check exam dates
+        carefully and carry your admit card to the exam center.
       </div>
 
       {/* Search */}
@@ -61,14 +78,14 @@ export default function AdmitCardPage() {
             type="text"
             placeholder="Search admit cards by exam name..."
             className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2"
-            style={{ outlineColor: PRIMARY }}
+            style={{ borderColor: PRIMARY }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 cursor-pointer"
-          >
+
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">
             <Search size={18} />
-          </button>
+          </span>
         </div>
       </div>
 
@@ -88,9 +105,11 @@ export default function AdmitCardPage() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">
                   Exam Name
                 </th>
+
                 <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">
                   Exam Date
                 </th>
+
                 <th className="px-6 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">
                   Action
                 </th>
@@ -98,25 +117,25 @@ export default function AdmitCardPage() {
             </thead>
 
             <tbody className="divide-y divide-neutral-200">
-              {mockAdmitCards.map((card) => (
-                <tr key={card.id}>
+              {filteredAdmitCards.map((card) => (
+                <tr key={card._id}>
                   {/* Exam Name */}
                   <td className="px-6 py-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 transition">
-                    {card.examName}
+                    {card.title}
                   </td>
 
                   {/* Exam Date */}
                   <td className="px-6 py-4 text-sm text-neutral-600 hover:bg-neutral-50 transition">
                     <div className="flex items-center gap-2">
                       <Calendar size={14} />
-                      {card.examDate}
+                      {card?.importantDates?.examDate || "Not Available"}
                     </div>
                   </td>
 
-                  {/* Download */}
+                  {/* View Detail */}
                   <td className="px-6 py-4 text-right hover:bg-neutral-50 transition">
-                    <a
-                      href={card.downloadLink}
+                    <Link
+                      href={`/admit-card/${card._id}`}
                       className="
                         inline-flex items-center gap-1
                         px-3 py-1.5
@@ -133,9 +152,9 @@ export default function AdmitCardPage() {
                         hover:text-white
                       "
                     >
-                      <Download size={14} />
-                      Download
-                    </a>
+                      <ExternalLink size={14} />
+                      View Detail
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -143,7 +162,7 @@ export default function AdmitCardPage() {
           </table>
         </div>
 
-        {mockAdmitCards.length === 0 && (
+        {filteredAdmitCards.length === 0 && (
           <div className="p-8 text-center text-neutral-600">
             No admit cards available at the moment.
           </div>
@@ -157,6 +176,7 @@ export default function AdmitCardPage() {
           <h3 className="text-lg font-semibold mb-4">
             Important Instructions
           </h3>
+
           <ul className="space-y-2 list-disc pl-5 text-sm text-neutral-700">
             <li>Carry a valid photo ID along with the admit card</li>
             <li>Reach the examination center at least 30 minutes early</li>
@@ -173,6 +193,7 @@ export default function AdmitCardPage() {
           <h3 className="text-lg font-semibold mb-4">
             Need Personalized Updates?
           </h3>
+
           <p className="text-sm mb-4">
             Sign up to receive notifications when admit cards matching your
             profile are released.

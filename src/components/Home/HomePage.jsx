@@ -14,26 +14,29 @@ import {
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import JobCard from "../shared/JobCard";
-import NewsCard from "../shared/NewsCard";
 import useGetAllJobs from "@/hooks/jobs/useGetAllJobs";
 import useGetAllResults from "@/hooks/result/useGetAllResults";
+import useGetAllAdmitCards from "@/hooks/admitCard/useGetAllAdmitCards";
 
 const PRIMARY = "#6ec1d1";
 
 export default function HomePage() {
   useGetAllJobs();
   useGetAllResults();
+  useGetAllAdmitCards();
 
-  const { allJobs, allResults } = useSelector((store) => store.auth);
+  const { allJobs, allResults, allAdmitCards } = useSelector(
+    (store) => store.auth
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isVoiceSearch, setIsVoiceSearch] = useState(false);
 
   // slicing
   const latestJobs = allJobs?.slice(0, 5);
-  const admitCardJobs = allJobs?.slice(9, 13);
 
-  // ⭐ results from results collection
+  const latestAdmitCards = allAdmitCards?.slice(0, 5);
+
   const latestResults = allResults?.slice(0, 5);
 
   return (
@@ -104,8 +107,8 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* ================= FOUR COLUMNS ================= */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ================= THREE COLUMNS ================= */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Latest Jobs */}
         <Column title="Latest Jobs">
           {latestJobs?.map((job) => (
@@ -114,7 +117,7 @@ export default function HomePage() {
           <FooterLink href="/jobs" label="View All Jobs" />
         </Column>
 
-        {/* ⭐ RESULTS COLUMN (UPDATED) */}
+        {/* RESULTS */}
         <Column title="Results">
           {latestResults?.map((result) => (
             <Link
@@ -136,19 +139,26 @@ export default function HomePage() {
           <FooterLink href="/results" label="View All Results" />
         </Column>
 
-        {/* Admit Cards */}
+        {/* ADMIT CARDS */}
         <Column title="Admit Cards">
-          {admitCardJobs?.map((job) => (
-            <JobCard key={job._id} job={job} />
-          ))}
-          <FooterLink href="/admit-cards" label="View All Admit Cards" />
-        </Column>
+          {latestAdmitCards?.map((card) => (
+            <Link
+              key={card._id}
+              href={`/admit-card/${card._id}`}
+              className="block border rounded-lg p-2 text-sm hover:bg-gray-50 cursor-pointer"
+            >
+              <p className="font-medium">{card.title}</p>
 
-        {/* News */}
-        <Column title="News">
-          <NewsCard />
-          <NewsCard />
-          <FooterLink href="/news" label="View All News" />
+              {card?.importantDates?.admitCardsDate && (
+                <span className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                  <Calendar size={12} />
+                  {card.importantDates.admitCardsDate}
+                </span>
+              )}
+            </Link>
+          ))}
+
+          <FooterLink href="/admit-cards" label="View All Admit Cards" />
         </Column>
       </section>
     </div>
@@ -175,7 +185,7 @@ function FooterLink({ href, label }) {
   return (
     <Link
       href={href}
-      className="flex items-center justify-center text-xs font-medium mt-2"
+      className="flex items-center justify-center text-xs font-medium mt-2 cursor-pointer"
       style={{ color: PRIMARY }}
     >
       {label} <ArrowRight size={12} className="ml-1" />

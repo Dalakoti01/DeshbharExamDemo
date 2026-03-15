@@ -1,19 +1,26 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Download,
   Search,
   Calendar,
   ChevronRight,
   Share2,
+  ExternalLink,
 } from "lucide-react";
-import { mockResults } from "@/data/mockData";
+import { useSelector } from "react-redux";
+import useGetAllResults from "@/hooks/result/useGetAllResults";
 
 const PRIMARY = "#6ec1d1";
 
 export default function ResultsPage() {
+  useGetAllResults();
+
+  const { allResults } = useSelector((store) => store.auth);
+
+  const [searchQuery, setSearchQuery] = useState("");
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -26,6 +33,16 @@ export default function ResultsPage() {
       alert("Link copied to clipboard");
     }
   };
+
+  /* ---------- Search Filter ---------- */
+
+  const filteredResults = useMemo(() => {
+    if (!allResults) return [];
+
+    return allResults.filter((result) =>
+      result.examName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [allResults, searchQuery]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -50,8 +67,8 @@ export default function ResultsPage() {
         className="p-4 rounded-lg mb-8 text-sm text-neutral-800"
         style={{ backgroundColor: `${PRIMARY}33` }}
       >
-        Find the latest exam results of various government exams. Download the
-        official PDFs directly.
+        Find the latest exam results of various government exams. Click "View
+        Detail" to see complete result information.
       </div>
 
       {/* Search */}
@@ -61,14 +78,14 @@ export default function ResultsPage() {
             type="text"
             placeholder="Search results by exam name..."
             className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2"
-            style={{ focusRingColor: PRIMARY }}
+            style={{ borderColor: PRIMARY }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 cursor-pointer"
-          >
+
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">
             <Search size={18} />
-          </button>
+          </span>
         </div>
       </div>
 
@@ -88,12 +105,15 @@ export default function ResultsPage() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">
                   Exam Name
                 </th>
+
                 <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">
                   Result Date
                 </th>
+
                 <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">
                   Result Type
                 </th>
+
                 <th className="px-6 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">
                   Action
                 </th>
@@ -101,63 +121,62 @@ export default function ResultsPage() {
             </thead>
 
             <tbody className="divide-y divide-neutral-200">
-  {mockResults.map((result) => (
-    <tr key={result.id}>
-      {/* Exam Name */}
-      <td className="px-6 py-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 transition">
-        {result.examName}
-      </td>
+              {filteredResults.map((result) => (
+                <tr key={result._id}>
+                  {/* Exam Name */}
+                  <td className="px-6 py-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 transition">
+                    {result.examName}
+                  </td>
 
-      {/* Result Date */}
-      <td className="px-6 py-4 text-sm text-neutral-600 hover:bg-neutral-50 transition">
-        <div className="flex items-center gap-2">
-          <Calendar size={14} />
-          {result.resultDate}
-        </div>
-      </td>
+                  {/* Result Date */}
+                  <td className="px-6 py-4 text-sm text-neutral-600 hover:bg-neutral-50 transition">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} />
+                      {result.resultDate || "Not Available"}
+                    </div>
+                  </td>
 
-      {/* Result Type */}
-      <td className="px-6 py-4 hover:bg-neutral-50 transition">
-        <span
-          className="inline-block rounded-full px-3 py-1 text-xs font-semibold text-white"
-          style={{ backgroundColor: "#6ec1d1" }}
-        >
-          {result.resultType}
-        </span>
-      </td>
+                  {/* Result Type */}
+                  <td className="px-6 py-4 hover:bg-neutral-50 transition">
+                    <span
+                      className="inline-block rounded-full px-3 py-1 text-xs font-semibold text-white"
+                      style={{ backgroundColor: PRIMARY }}
+                    >
+                      {result.resultType || "Result"}
+                    </span>
+                  </td>
 
-      {/* Action */}
-      <td className="px-6 py-4 text-right hover:bg-neutral-50 transition">
-        <a
-          href={result.downloadLink}
-          className="
-            inline-flex items-center gap-1
-            px-3 py-1.5
-            rounded-md
-            text-sm font-medium
-            border
-            transition-all
-            cursor-pointer
+                  {/* Action */}
+                  <td className="px-6 py-4 text-right hover:bg-neutral-50 transition">
+                    <Link
+                      href={`/result/${result._id}`}
+                      className="
+                        inline-flex items-center gap-1
+                        px-3 py-1.5
+                        rounded-md
+                        text-sm font-medium
+                        border
+                        transition-all
+                        cursor-pointer
 
-            text-[#6ec1d1]
-            border-[#6ec1d1]
+                        text-[#6ec1d1]
+                        border-[#6ec1d1]
 
-            hover:bg-[#6ec1d1]
-            hover:text-white
-          "
-        >
-          <Download size={14} />
-          Download
-        </a>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+                        hover:bg-[#6ec1d1]
+                        hover:text-white
+                      "
+                    >
+                      <ExternalLink size={14} />
+                      View Detail
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
 
-        {mockResults.length === 0 && (
+        {filteredResults.length === 0 && (
           <div className="p-8 text-center text-neutral-600">
             No results found.
           </div>
@@ -199,6 +218,7 @@ export default function ResultsPage() {
           <h3 className="text-lg font-semibold mb-4">
             Need Personalized Results?
           </h3>
+
           <p className="text-sm mb-4">
             Sign up to receive result alerts relevant to your profile.
           </p>
