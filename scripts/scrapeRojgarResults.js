@@ -74,13 +74,23 @@ export async function scrapeRojgarResult() {
   }
 
   /* ------------------ 5. Scrape details for NEW jobs ------------------ */
-  for (const job of newJobs) {
+ for (const job of newJobs) {
+  try {
+
     const exists = await ScrapedJobDetail.exists({ url: job.url });
-    if (exists) continue;
+    if (exists) {
+      console.log("⚠️ Detail already exists:", job.url);
+      continue;
+    }
 
     console.log("🔍 Scraping job detail:", job.title);
 
     const detail = await scrapeJobDetail(job.url);
+
+    if (!detail || !detail.rawContent?.length) {
+      console.log("⚠️ Empty detail content:", job.url);
+      continue;
+    }
 
     await ScrapedJobDetail.create({
       url: detail.url,
@@ -89,7 +99,16 @@ export async function scrapeRojgarResult() {
       scrapedAt: detail.scrapedAt,
       aiProcessed: false,
     });
+
+    console.log("✅ Detail saved:", job.url);
+
+  } catch (err) {
+
+    console.error("❌ Detail scraping failed:", job.url);
+    console.error(err.message);
+
   }
+}
 
   /* ------------------ 6. AI STAGE ------------------ */
   console.log("🤖 Starting Gemini AI processing...");
@@ -97,3 +116,13 @@ export async function scrapeRojgarResult() {
 
   console.log("🚀 RojgarResult pipeline completed (Mongo + AI)");
 }
+
+scrapeRojgarResult()
+  .then(() => {
+    console.log("✅ Script finished");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("❌ Script failed:", err);
+    process.exit(1);
+  });

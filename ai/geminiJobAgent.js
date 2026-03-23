@@ -1,6 +1,6 @@
 import "dotenv/config";
-import ScrapedJobDetail from "@/models/ScrapedJobDetail";
-import AiProcessedJob from "@/models/AiProcessedJob";
+import ScrapedJobDetail from "../src/models/ScrapedJobDetail.js";
+import AiProcessedJob from "../src/models/AiProcessedJob.js";
 import { flattenRawContent } from "../src/lib/flattenRawContent.js";
 
 const API_KEY = process.env.GEMINI_API_KEY;
