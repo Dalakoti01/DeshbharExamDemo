@@ -26,7 +26,7 @@ export default function HomePage() {
   useGetAllAdmitCards();
 
   const { allJobs, allResults, allAdmitCards } = useSelector(
-    (store) => store.auth
+    (store) => store.auth,
   );
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,13 +43,14 @@ export default function HomePage() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* ================= HERO ================= */}
       <section className="mb-10 text-center">
-        <h1 className="text-3xl font-bold mb-3">
+        <h1 className="text-4xl font-bold mb-3">
           Find Your Perfect{" "}
-          <span style={{ color: PRIMARY }}>Government Job</span>
+          <span className="text-[#ef4444]">Government Job</span>
         </h1>
 
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Your one-stop platform for all government job notifications.
+        <p className="text-gray-600 max-w-2xl  mx-auto">
+          Your one-stop platform for all government job notifications, exam
+          results, admit cards, and more.
         </p>
 
         <form className="max-w-2xl mx-auto mt-6 relative">
@@ -87,25 +88,93 @@ export default function HomePage() {
         </form>
       </section>
 
-      {/* ================= CATEGORIES ================= */}
-      <section className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
-        {[
-          { label: "Latest Jobs", icon: Calendar, path: "/jobs" },
-          { label: "Results", icon: CheckSquare, path: "/results" },
-          { label: "Admit Cards", icon: FileText, path: "/admit-cards" },
-          { label: "Answer Keys", icon: Award, path: "/answer-keys" },
-          { label: "Syllabus", icon: BookOpen, path: "/syllabus" },
-        ].map(({ label, icon: Icon, path }) => (
+      {/* ================= HOT ENTRIES ================= */}
+<section className="mb-10">
+  <div className="bg-white rounded-xl border p-6 shadow-sm">
+
+    {/* Header */}
+    <div className="flex items-center justify-between mb-5">
+      <h2 className="flex items-center">
+        <span className="bg-gradient-to-r from-red-500 to-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold mr-3 shadow-lg animate-pulse">
+          🔥 HOT ENTRIES
+        </span>
+      </h2>
+
+      <Link
+        href="/jobs"
+        className="text-sm font-medium flex items-center px-3 py-1 rounded-lg bg-[#6ec1d1]/10"
+        style={{ color: PRIMARY }}
+      >
+        View All <ArrowRight size={14} className="ml-1" />
+      </Link>
+    </div>
+
+    {/* Grid */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {[
+        // 2 Jobs
+        ...latestJobs?.slice(0, 2)?.map((job) => ({
+          id: job._id,
+          title: job.title,
+          subtitle: job.organization,
+          href: `/job/${job._id}`,
+          icon: <Calendar size={16} className="text-[#6ec1d1]" />,
+          isNew: true, // you can later control from backend
+        })),
+
+        // 1 Result
+        ...latestResults?.slice(0, 1)?.map((result) => ({
+          id: result._id,
+          title: result.examName,
+          subtitle: "Result",
+          href: `/result/${result._id}`,
+          icon: <CheckSquare size={16} className="text-green-500" />,
+          isNew: false,
+        })),
+
+        // 1 Admit Card
+        ...latestAdmitCards?.slice(0, 1)?.map((card) => ({
+          id: card._id,
+          title: card.title,
+          subtitle: "Admit Card",
+          href: `/admit-card/${card._id}`,
+          icon: <FileText size={16} className="text-blue-500" />,
+          isNew: false,
+        })),
+      ]
+        .slice(0, 4)
+        .map((item) => (
           <Link
-            key={label}
-            href={path}
-            className="bg-white border rounded-xl p-4 flex flex-col items-center gap-2 hover:shadow-md"
+            key={item.id}
+            href={item.href}
+            className="bg-white border rounded-lg p-3 hover:shadow-md transition-all duration-200 hover:scale-[1.05] block cursor-pointer"
           >
-            <Icon size={22} style={{ color: PRIMARY }} />
-            <span className="text-sm font-medium">{label}</span>
+            {/* Icon */}
+            <div className="flex justify-center mb-2">{item.icon}</div>
+
+            {/* Title */}
+            <p className="text-xs font-medium text-center line-clamp-2 mb-2">
+              {item.title}
+            </p>
+
+            {/* Subtitle */}
+            <p className="text-[11px] text-gray-500 text-center truncate mb-2">
+              {item.subtitle}
+            </p>
+
+            {/* NEW Badge */}
+            <div className="flex justify-center h-5">
+              {item.isNew && (
+                <span className="bg-yellow-400 text-black text-[10px] font-semibold px-2 py-[2px] rounded">
+                  NEW
+                </span>
+              )}
+            </div>
           </Link>
         ))}
-      </section>
+    </div>
+  </div>
+</section>
 
       {/* ================= THREE COLUMNS ================= */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

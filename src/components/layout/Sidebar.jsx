@@ -105,7 +105,6 @@ export default function Sidebar({ onToggle }) {
       icon: BookOpen,
       label: language === "en" ? "Syllabus" : "पाठ्यक्रम",
     },
-    { path: "/news", icon: Bell, label: language === "en" ? "News" : "समाचार" },
   ];
 
   const quickActions = [
@@ -141,7 +140,7 @@ export default function Sidebar({ onToggle }) {
         {/* Toggle Button */}
         <button
           onClick={toggleSidebar}
-          className="absolute -right-3 top-4 p-1.5 rounded-full text-white shadow-lg cursor-pointer"
+          className="absolute -right-3 top-4 bg-[#6ec1d1] text-white p-1.5 rounded-full shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer"
           style={{ backgroundColor: PRIMARY }}
         >
           {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -189,7 +188,12 @@ export default function Sidebar({ onToggle }) {
                   <Link
                     key={item.path}
                     href={item.path}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition cursor-pointer"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer
+  ${
+    isActive
+      ? "bg-[#6ec1d1] text-white shadow-md"
+      : "text-gray-600 hover:bg-gray-100 hover:text-[#6ec1d1] hover:shadow-sm"
+  }`}
                     style={{
                       backgroundColor: isActive ? PRIMARY : "transparent",
                       color: isActive ? "#ffffff" : "#4b5563",
@@ -197,7 +201,7 @@ export default function Sidebar({ onToggle }) {
                   >
                     <Icon
                       size={20}
-                      style={{ color: isActive ? "#fff" : PRIMARY }}
+                      className={isActive ? "text-white" : "text-[#6ec1d1]"}
                     />
                     {!isCollapsed && (
                       <span className="text-sm font-medium">{item.label}</span>
@@ -237,10 +241,13 @@ export default function Sidebar({ onToggle }) {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between px-3 py-2.5 rounded-lg border cursor-pointer"
+                    className="flex items-center justify-between px-3 py-2.5 rounded-lg 
+bg-gradient-to-r from-gray-50 to-gray-100 
+hover:from-gray-100 hover:to-gray-200 
+transition-all duration-200 cursor-pointer border"
                   >
                     <div className="flex items-center gap-3">
-                      <Icon size={16} style={{ color: PRIMARY }} />
+                      <Icon size={16} className="text-[#6ec1d1]" />{" "}
                       {!isCollapsed && (
                         <span className="text-sm font-medium text-gray-700">
                           {action.label}
@@ -269,12 +276,12 @@ export default function Sidebar({ onToggle }) {
               </h3>
 
               <div className="space-y-2 text-xs">
-                <div className="p-3 rounded-lg border">
+                <div className="p-3 rounded-lg border bg-gradient-to-r from-gray-50 to-gray-100">
                   <p className="font-semibold">SSC GD 2024</p>
                   <p>Application deadline extended</p>
                   <p className="text-gray-500 mt-1">2 hours ago</p>
                 </div>
-                <div className="p-3 rounded-lg border">
+                <div className="p-3 rounded-lg border bg-gradient-to-r from-gray-50 to-gray-100">
                   <p className="font-semibold">UPSC CSE 2024</p>
                   <p>Prelims result declared</p>
                   <p className="text-gray-500 mt-1">1 day ago</p>
@@ -338,8 +345,8 @@ function QuickLink({ href, icon: Icon, label }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-gray-600 transition cursor-pointer"
-    >
+className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-gray-600 
+hover:bg-gray-100 hover:text-[#6ec1d1] transition-all duration-200 cursor-pointer"    >
       <Icon size={16} style={{ color: "#6ec1d1" }} />
       <span className="font-medium">{label}</span>
     </Link>

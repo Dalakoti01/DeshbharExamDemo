@@ -46,37 +46,31 @@ export default function Header() {
       {/* Top Bar */}
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 cursor-pointer">
-          <div className="border-2 border-white rounded-xl px-4 py-1 shadow-md">
-            <span className="text-3xl font-black lowercase tracking-tight">
-              deshbhar
-            </span>
-          </div>
-          <span className="hidden sm:block text-xl font-extrabold">
-            exam
-          </span>
-        </Link>
+      <Link href="/" className="flex items-center cursor-pointer">
+  <div className="bg-[#60aebe] border-2 border-white px-5 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+    <span className="text-white text-lg sm:text-xl font-extrabold tracking-tight">
+      Deshbhar Exam
+    </span>
+  </div>
+</Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-          {[
-            // ["/age-calculator", "Age Calculator", "आयु कैलकुलेटर"],
-            ["/answer-keys", "Answer Keys", "उत्तर कुंजी"],
-            ["/syllabus", "Syllabus", "पाठ्यक्रम"],
-            ["/news", "News", "समाचार"],
-          ].map(([path, en, hi]) => (
-            <Link
-              key={path}
-              href={path}
-              className="px-4 py-2 rounded-xl font-semibold text-white hover:bg-white hover:text-primary transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 cursor-pointer"
-            >
-              {language === "en" ? en : hi}
-            </Link>
-          ))}
-
-          {/* Image Tools */}
-          
-        </nav>
+       <nav className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+  {[
+    ["/jobs", "Jobs", "नौकरियां"],
+    ["/admit-cards", "Admit Cards", "एडमिट कार्ड"],
+    ["/answer-keys", "Answer Keys", "उत्तर कुंजी"],
+    ["/results", "Results", "परिणाम"],
+  ].map(([path, en, hi]) => (
+    <Link
+      key={path}
+      href={path}
+      className="px-4 py-2 rounded-xl font-semibold text-white hover:bg-white hover:text-primary transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 cursor-pointer"
+    >
+      {language === "en" ? en : hi}
+    </Link>
+  ))}
+</nav>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
@@ -99,13 +93,14 @@ export default function Header() {
             )}
           </Link>
 
-          {/* Language Toggle */}
-          <button
-            onClick={toggleLanguage}
-            className="px-3 py-1 rounded-xl bg-white text-primary font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition cursor-pointer"
-          >
-            {language === "en" ? "हिंदी" : "ENG"}
-          </button>
+         <button
+  onClick={toggleLanguage}
+  className="px-3 py-1 rounded-xl bg-[#60aebe] text-white font-semibold  shadow-md 
+             hover:bg-white hover:text-[#60aebe] 
+             transform hover:scale-105 transition-all duration-300 cursor-pointer"
+>
+  {language === "en" ? "हिंदी" : "ENG"}
+</button>
 
           {user ? (
             <Link
